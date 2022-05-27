@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"
+        integrity="sha512-odNmoc1XJy5x1TMVMdC7EMs3IVdItLPlCeL5vSUPN2llYKMJ2eByTTAIiiuqLg+GdNr9hF6z81p27DArRFKT7A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <title>Document</title>
+    <style>
+        div input {
+            color: black;
+            padding: 5px;
+            outline: none;
+            border: 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body class="flex justify-center items-center h-screen w-screen bg-slate-700 text-white">
+    <form action="javascript:void(0);" id="loginForm" method="post"
+        class="w-full login-form flex items-center justify-center flex-col">
+        <div class="flex flex-col justify-center">
+            Email : <input type="text" name="email" autofocus="" autocapitalize="none" autocomplete="username"
+                maxlength="254" required="" id="id_username" class="text-black">
+        </div>
+        <br>
+        <div class="flex flex-col justify-center">
+            Password :
+            <input type="password" class="text-black" name="password" autocomplete="current-password" required=""
+                id="id_password">
+        </div>
+
+        <br>
+        <button type="submit" class="hover:bg-gray-500 rounded-lg hover:text-white px-4">Join</button>
+        <div class="flex flex-col">
+            <div>
+                <a href="javascript:void(0);">Forget password?</a>
+            </div>
+            <div>
+                Don't have an account? <a href="signup.html" class="text-blue-400">SignUp</a>
+            </div>
+        </div>
+    </form>
+
+    <script>
+        const form = document.getElementById('loginForm')
+
+        form.onsubmit = e => {
+            let data = {}
+            for (let i=0; i < form.getElementsByTagName('input').length; i++){
+                input = form.getElementsByTagName('input')[i]
+                data[input.name] = input.value
+            }
+
+
+            console.log(data)
+            axios.post("http://localhost:8000/signup/", data).then(res => {
+                console.log(res.data)
+            })
+        }
+    </script>
+</body>
+
+</html>
