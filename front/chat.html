@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+        integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/peerjs@1.3.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"
+        integrity="sha512-odNmoc1XJy5x1TMVMdC7EMs3IVdItLPlCeL5vSUPN2llYKMJ2eByTTAIiiuqLg+GdNr9hF6z81p27DArRFKT7A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"
+        integrity="sha512-odNmoc1XJy5x1TMVMdC7EMs3IVdItLPlCeL5vSUPN2llYKMJ2eByTTAIiiuqLg+GdNr9hF6z81p27DArRFKT7A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <title>Document</title>
+    <style>
+        div input {
+            color: black;
+            padding: 5px;
+            outline: none;
+            border: 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col justify-center items-center h-screen w-screen bg-slate-700 text-white">
+    <div class="flex flex-col w-full flex-1 justify-between p-4 max-h-full">
+        <div class="flex justify-between">
+            <div class="flex items-center remoteUSER">
+
+            </div>
+            <div class="flex items-center">
+                <button class="p-2 caller">
+                    <i class="fa fa-video"></i>
+                </button>
+                <button class="p-2 caller"><i class="fa fa-microphone"></i></button>
+                <button class="p-2"><i class="fa fa-info"></i></button>
+            </div>
+        </div>
+        <div id="messages-container" class="overflow-auto flex-1 p-2">
+
+        </div>
+
+        <form id="messageForm" action="javascript:void(0);" data-submitting="false" class="flex p-4">
+            <div class="flex items-center rounded-full bg-gray-500 p-2 w-full">
+                <input type="text" name="content" placeholder="Say something"
+                    class="flex-1 placeholder:text-white outline-none bg-transparent">
+                <button>
+                    <i class="fa fa-paper-plane"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <dialog class="fixed w-full h-full bg-slate-700" id="callModal">
+        <div class="p-2 flex-col items-center justify-center text-white flex bg-black text-center h-full w-full">
+            <p id="calling-holder" class =" absolute top-50 left-50">
+                Calling
+            </p>
+            <video src="" id="remoteStream" class="rounded-sm object-fill h-full w-full"></video>
+        </div>
+        <div class="absolute z-10 bottom-4 right-2">
+            <video class="w-24 h-36 object-fill rounded-lg" id="localStream"></video>
+        </div>
+    </dialog>
+
+    <dialog class="fixed w-full h-full bg-slate-700 items-center justify-center" id="callingModal">
+        <div class="flex flex-col h-full w-full">
+            <div class="flex flex-col items-center h-full justify-center">
+                <img src="https://cdn.pixabay.com/photo/2020/07/01/12/58/icon-5359553_1280.png" class="w-48 h-48 rounded-lg" alt="user-img" />
+                <div class="text-center text-white">
+                    Incoming call
+                    <p id="caller-name">
+                    </p>
+                    <br>
+                    <div class="flex justify-between w-full">
+                        <button id="answercall" class="text-blue-500">
+                            <i class="fa fa-phone"></i>
+                        </button>
+                        <button id="declinecall" class="text-red-500">
+                            <i class="fa fa-phone"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        const localVideo = document.getElementById('localStream')
+        const remoteVideo = document.getElementById('remoteStream')
+
+        const setRemoteStream = s => {
+            remoteVideo.srcObject = s
+            remoteVideo.onloadedmetadata = _ => remoteVideo.play()
+        }
+
+
+        const callingModal = document.getElementById('callingModal')
+        const newMessage = e => {
+            messageContainer.innerHTML += render_message(e)
+            document.getElementById(`message-${e.id}`).scrollIntoView()
+        }
+        const remoteID = window.location.search.split("?id=")[1]
+        const render_message = message => {
+            return `
+            <div id="message-${message.id}" class="py-2 ${message.sender_id == user.id ? "justify-start" : "justify-end"} flex w-full">
+                <div>
+                    <div class="break-all px-4 rounded-full">
+                        <p class="${message.sender_id == user.id ? "bg-green-600" : "bg-slate-400 text-black"} p-2 rounded-lg">
+                        ${message.content}
+                        </p>
+                    </div>
+                </div>
+            </div>
+                `
+        }
+        const messageContainer = document.getElementById('messages-container')
+        const user = JSON.parse(localStorage.getItem('user'))
+        console.log(user.id, remoteID)
+        const socket = new WebSocket(`ws://localhost:8000/${user.id}`)
+        socket.onmessage = e => {
+            const data = JSON.parse(e.data)
+            console.log(data)
+            if(data.newMessage)
+                newMessage(data.newMessage)
+            
+            if(data.newCall){
+                document.getElementById('caller-name').innerHTML = data.newCall.first_name + " " + data.newCall.last_name
+                callingModal.showModal()
+            }
+        }
+        const callModal = document.getElementById("callModal")
+        const form = document.getElementById('messageForm')
+        const peer = new Peer(`user-${user.id}`)
+        peer.on('call', call => {
+            const answer = document.getElementById('answercall')
+            answer.onclick = e => {
+                navigator.mediaDevices.getUserMedia({video:true}).then(myStream => {
+                    localVideo.srcObject = myStream
+                    localVideo.onloadeddata = _ => localVideo.play()
+                    call.answer(myStream)
+                    callingModal.close()
+                    document.getElementById('calling-holder').remove()
+                    callModal.showModal()
+                    call.on('stream', remoteStream => {
+                        setRemoteStream(remoteStream)
+                    })
+                })
+            }
+        })
+        const render_contact = e => {
+            return `
+            <div class="flex p-2 items-center">
+                <div>
+                    <img src="https://cdn.pixabay.com/photo/2020/07/01/12/58/icon-5359553_1280.png" class="w-12 h-12 rounded-lg" alt="user-img" />
+                </div>
+                <div class="p-2">
+                    ${e.first_name}
+                </div>
+            </div>
+            `
+        }
+        axios({
+            method: 'GET',
+            url: `http://localhost:8000/chat/${remoteID}`
+        }).then(res => {
+            const data = res.data
+            console.log(data)
+            document.querySelector('.remoteUSER').innerHTML = render_contact(data.user)
+            data.messages.map(message => {
+                newMessage(message)
+            })            
+            document.getElementById(`message-${data.messages[data.messages.length - 1].id}`).scrollIntoView()
+        })
+
+
+        form.onsubmit = e => {
+            if (form.dataset.submitting == "true") return;
+            form.dataset.submitting = "true"
+            let data = {}
+            for (let i = 0; i < form.getElementsByTagName('input').length; i++) {
+                input = form.getElementsByTagName('input')[i]
+                data[input.name] = input.value
+            }
+            data['sender_id'] = user.id
+            data['receiver_id'] = parseInt(remoteID)
+            console.log(data)
+            axios.post("http://localhost:8000/message/create/", data).then(res => {
+                if(res.status == 200)
+                    {
+                        newMessage(res.data)
+                        form.dataset.submitting = "false"
+                        for (let i = 0; i < form.getElementsByTagName('input').length; i++) {
+                            input = form.getElementsByTagName('input')[i]
+                            input.value = ''
+                        }   
+                    }
+                })
+        }
+
+        let btns = document.querySelectorAll('.caller')
+        Array.from(btns).map(btn => {
+            btn.dataset.id = `user-${remoteID}`
+            btn.onclick = e => {
+                console.log(peer.id, btn.dataset.id)
+                socket.send(JSON.stringify({'newCall' : user, 'groupName' : `user-${remoteID}`}))
+                navigator.mediaDevices.getUserMedia({ video: true }).then(localStream => {
+                    call = peer.call(btn.dataset.id, localStream)
+                    
+                    call.on('stream', remotes => {
+                        document.getElementById('calling-holder').remove()
+                        setRemoteStream(remotes)
+                    })
+                    callModal.showModal()
+                    localVideo.srcObject = localStream
+                    localVideo.onloadeddata = _ => localVideo.play()
+                })
+            }
+        })
+    </script>
+</body>
+</html>

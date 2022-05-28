@@ -60,11 +60,14 @@
                 data[input.name] = input.value
             }
 
-
             console.log(data)
-            axios.post("http://localhost:8000/signup/", data).then(res => {
-                console.log(res.data)
-            })
+            axios.post("http://localhost:8000/login/", data).then(res => {
+                if(res.status == 200)
+                    {
+                        localStorage.setItem('user', JSON.stringify(res.data))
+                        window.location.href = '/home.html'
+                    }
+                })
         }
     </script>
 </body>

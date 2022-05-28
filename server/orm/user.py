@@ -15,11 +15,14 @@ def get_user(id : int):
 
 def create_user(db: SessionLocal, user: schemas.UserCreate):
     fake_hashed_password = password_hasher(user.password)
-    db_user = models.UserModel(email=user.email, hashed_password=fake_hashed_password)
+    db_user = models.UserModel(email=user.email, hashed_password=fake_hashed_password, first_name=user.first_name, last_name=user.last_name)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
 
-# def get_user_by_email(db: SessionLocal, email: str):
-#     raise BaseException("tezk")
+def get_all_users(db : SessionLocal = SessionLocal()):
+    return db.query(models.UserModel).all()
+
+def get_user_by_email(email : str = "admin@gmail.com" , db: SessionLocal = SessionLocal()):
+    return db.query(models.UserModel).filter_by(email=email).first()

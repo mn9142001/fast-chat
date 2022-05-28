@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/peerjs@1.3.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"
+        integrity="sha512-odNmoc1XJy5x1TMVMdC7EMs3IVdItLPlCeL5vSUPN2llYKMJ2eByTTAIiiuqLg+GdNr9hF6z81p27DArRFKT7A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"
+        integrity="sha512-odNmoc1XJy5x1TMVMdC7EMs3IVdItLPlCeL5vSUPN2llYKMJ2eByTTAIiiuqLg+GdNr9hF6z81p27DArRFKT7A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <title>Document</title>
+    <style>
+        div input {
+            color: black;
+            padding: 5px;
+            outline: none;
+            border: 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col justify-center items-center h-screen w-screen bg-slate-700 text-white">
+    <div class="flex justify-end w-full p-2 items-center">
+        <p id="user-name">
+            Hello,
+        </p>
+    </div>
+    <div class="flex flex-col w-full flex-1 justify-start p-4" id="contacts"></div>
+
+    <script>
+        const render_contact = user => {
+            return `
+                <div class="flex flex-col cursor-pointer hover:bg-slate-500 p-2 rounded-md">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div>
+                                <img src="https://cdn.pixabay.com/photo/2020/07/01/12/58/icon-5359553_1280.png" class="w-12 h-12 rounded-lg" alt="user-img" />
+                            </div>
+                            <div class="p-2">
+                                ${user.first_name.toUpperCase()} ${user.last_name.toUpperCase()}
+                            </div>    
+                        </div>
+                        <div>
+                            <button class="caller p-2 rounded-lg" data-id="user-${user.id}">Call</button>
+                        </div>
+                    </div>
+                    <div class="px-4">
+                        <p>
+                            Some random message 
+                        </p>
+                    </div>
+                </div>
+                <br />
+                `
+        }
+    
+        const user = JSON.parse(localStorage.getItem('user'))
+        document.querySelector('#user-name').innerText += " " + user.first_name
+        const socket = new WebSocket(`ws://localhost:8000/${user.id}`)
+        socket.onmessage = e => console.log(JSON.parse(e.data))
+        const contact_container = document.querySelector("#contacts")
+        const peer = new Peer(`user-${user.id}`)
+        peer.on('call', remoteStream => {
+            alert("called")
+        })
+
+        console.log(peer.id)
+        const listener = e => {
+            let btns = document.querySelectorAll('.caller ')
+            console.log(btns)
+            Array.from(btns).map(btn => {
+                btn.onclick = e => {                    
+                    console.log(peer.id, e.target.dataset.id)
+                    navigator.mediaDevices.getUserMedia({video : true}).then(localStream => {
+                        peer.call(e.target.dataset.id, localStream)
+                    })
+                }
+            })
+        }
+        axios({
+            method : 'GET',
+            url : 'http://localhost:8000/users/list'
+        }).then(res => {
+            const data = res.data
+            data.map(user => {
+                contact_container.innerHTML += render_contact(user)
+            })
+            listener()
+        })
+
+
+    </script>
+</body>
+
+</html>

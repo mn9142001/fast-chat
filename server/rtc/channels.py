@@ -75,11 +75,16 @@ class SocketManager(ChannlsManager):
 
     #receive from websocket
     async def receive(self, group_name, data):
-        await self.group_send(group_name, json.dumps(data))
+        print(data.get('groupName'))
+        if data.get('groupName', False):
+            groupName = data.get('groupName')
+            await self.group_send(groupName, json.dumps(data))
+        else:
+            await self.group_send(group_name, json.dumps(data))
 
     #receive message from server and send to websocket
     async def group_send(self, group_name, data):
-        
+        print(group_name, data)
         await self.send(group_name, data)
 
 FastSocket = SocketManager()

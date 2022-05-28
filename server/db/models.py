@@ -1,8 +1,12 @@
-from .database import Base
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Enum
+from rtc.channels import FastSocket
+from .database import Base, SessionLocal
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Enum, event
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
+from asgiref.sync import async_to_sync
+import json
+from datetime import date, datetime
 
 class MessageStateEnum(enum.Enum):
     sent = 1
@@ -31,4 +35,18 @@ class Message(BaseModel):
     receiver = relationship("UserModel", foreign_keys=receiver_id)
     content = Column(String)
     created = Column(DateTime, default=datetime.utcnow)
-    state = Column(Enum(MessageStateEnum))
+    state = Column(Enum(MessageStateEnum), default=MessageStateEnum.sent)
+
+def json_serial(obj):
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    elif isinstance(obj, MessageStateEnum):
+        return 1
+    raise TypeError ("Type %s not serializable" % type(obj))
+
+
+@event.listens_for(Message, 'after_insert')
+def after_message(mapper, connection, instance):
+    async_to_sync(FastSocket.group_send)(
+        f"user-{instance.receiver_id}", json.dumps({"newMessage" : {c.name: getattr(instance, c.name) for c in instance.__table__.columns}}, default=json_serial)
+    )
